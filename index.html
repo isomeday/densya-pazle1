@@ -264,7 +264,7 @@ h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1
   <h3>とくてん</h3>
   <div class="card">
     <h4>むげんループ かんせい</h4>
-    <p>つかった タイル 1まいで 10てん。はやく できたら ボーナスが つくよ。</p>
+    <p>ループで でんしゃが とおる タイル 1まいで 10てん。じゅうじを 2かい とおると 2まいぶん！ はやく できたら ボーナスが つくよ。</p>
     <table class="pts">
       <tr><td>0〜99びょう</td><td>+40てん</td></tr>
       <tr><td>100〜199びょう</td><td>+30てん</td></tr>
@@ -272,7 +272,7 @@ h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1
       <tr><td>300〜399びょう</td><td>+10てん</td></tr>
       <tr><td>400びょう〜</td><td>+0てん</td></tr>
     </table>
-    <p>さいこうは 150てん(タイル 11まい ＋ 40てん)</p>
+    <p>さいこうは 170てん(タイル 11まい ぜんぶを とおり、じゅうじ 2まいを 2かいずつ とおると 13まいぶん ＋ 40てん)</p>
   </div>
   <div class="card">
     <h4>いきどまりで おしまい</h4>
@@ -319,8 +319,8 @@ h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1
     <h2 id="doneTitle"></h2>
     <p class="reason" id="reason">せんろが とぎれちゃった</p>
     <p class="points"><b id="points">0</b> てん</p>
-    <p class="detail" id="tilesLine">タイル <b id="tilesNum">0</b> まい</p>
-    <p class="detail"><b id="secNum">0</b> <span id="secUnit">びょう</span></p>
+    <p class="detail" id="tilesLine">とおった タイル <b id="tilesNum">0</b> まい<span id="tilesPts"></span></p>
+    <p class="detail"><b id="secNum">0</b> <span id="secUnit">びょう</span><span id="secPts"></span></p>
     <button class="primary" id="sameBtn">おなじ せんろで もういちど</button>
     <button class="second" id="newBtn">あたらしい せんろで あそぶ</button>
     <button class="hold" id="homeBtn" aria-label="ながおしで せっていを かえる"><span class="hold-fill"></span><span class="hold-label">ながおしで せっていを かえる</span></button>
@@ -806,7 +806,8 @@ h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1
       if (j >= 0){
         const cyc = wraps.slice(j + 1).concat([wrapped]);
         const steps = keys[keys.length - 1] === key0 ? keys.length : keys.length + 1;
-        return {tiles:new Set(cells.slice(j)).size, wraps:cyc.some(Boolean), steps};
+        // passes: ループ1しゅうで電車が通るタイルの枚数(十字を2回通れば2枚と数える)
+        return {tiles:new Set(cells.slice(j)).size, passes:keys.length - j, wraps:cyc.some(Boolean), steps};
       }
       keys.push(key); cells.push(c + "," + r); wraps.push(wrapped);
       ex = exitFor(t.type, entry);
@@ -821,7 +822,7 @@ h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1
     if (reset) G.lap = null;
     if (G.lap) return;
     const L = findLoop();
-    if (L && (loopMode === "wrap" || !L.wraps)) G.lap = {left:L.steps, tiles:L.tiles};
+    if (L && (loopMode === "wrap" || !L.wraps)) G.lap = {left:L.steps, tiles:L.passes};
   }
   function lapTick(){
     if (!G.lap){ checkLoop(); return; }
@@ -858,8 +859,10 @@ h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1
     $("#points").textContent = pts;
     $("#tilesLine").hidden = kind !== "clear";
     $("#tilesNum").textContent = tiles;
+    $("#tilesPts").textContent = `(${tiles * 10}てん)`;
     $("#secNum").textContent = sec;
     $("#secUnit").textContent = kind === "clear" ? "びょう" : "びょう はしったよ";
+    $("#secPts").textContent = `(${kind === "clear" ? timeBonus(sec) : pts}てん)`;
     $("#badge").hidden = !isHi;
     const party = kind === "clear" || isHi;
     $("#cheer").hidden = !party;
