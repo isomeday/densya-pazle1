@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="でんしゃパズル">
+<title>でんしゃパズル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#CDEBF0; --surface:#FFFFFF; --ink:#24414A; --muted:#5D7A82;
+  --line:rgba(36,65,74,.2); --frame:#B5793F; --tray:#E6BE86;
+  --sun:#FFC83D; --sun-edge:#D9A01E; --sun-ink:#3A2A00; --leaf:#2F9C72;
+  --grass:#B7E2A8; --tie:#9A6534; --rail:#5E6B74;
+  --train:#FF6F7F; --train-roof:#E04E62; --window:#24414A;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13242A; --surface:#1E333A; --ink:#E6F2F4; --muted:#9DB6BC;
+    --line:rgba(230,242,244,.2); --frame:#7C5230; --tray:#A47A4A;
+    --leaf:#4CC495; --grass:#4F7F52; --tie:#C08A52; --rail:#C9D3D8;
+    --window:#13242A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13242A; --surface:#1E333A; --ink:#E6F2F4; --muted:#9DB6BC;
+  --line:rgba(230,242,244,.2); --frame:#7C5230; --tray:#A47A4A;
+  --leaf:#4CC495; --grass:#4F7F52; --tie:#C08A52; --rail:#C9D3D8;
+  --window:#13242A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;background:var(--bg)}
+body{
+  height:100%;margin:0;background:var(--bg);color:var(--ink);
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  overflow:hidden;overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  -webkit-text-size-adjust:100%;
+}
+[hidden]{display:none!important}
+.screen{height:100%}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--leaf);outline-offset:3px}
+
+/* ---------- せってい(はじめの画面) ---------- */
+#home,#help{
+  overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  max-width:520px;margin:0 auto;padding:16px 18px 24px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;flex:none;transform:rotate(-6deg)}
+h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:.04em;line-height:1.2}
+.lead{margin:0;font-size:1rem;font-weight:700;line-height:1.7}
+.hiscore{
+  margin:0;align-self:flex-start;background:var(--surface);border-radius:999px;
+  padding:6px 16px;font-weight:800;font-size:.95rem;
+}
+.hiscore b{font-size:1.25rem;color:var(--train-roof)}
+.hiscore small{font-size:.85rem;color:var(--muted);font-weight:700}
+.btnrow{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.speeds{border:0;padding:0;margin:0;min-width:0}
+.speeds legend{font-weight:800;margin-bottom:8px;padding:0;font-size:1rem}
+.speed-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.speed{
+  appearance:none;border:2px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:14px;padding:9px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-weight:800;font-size:1rem;line-height:1.3;
+}
+.speed[aria-pressed="true"]{border-color:var(--leaf);box-shadow:inset 0 0 0 2px var(--leaf)}
+.speed .icon{display:block;width:60px;height:30px}
+.primary{
+  appearance:none;border:0;border-radius:18px;background:var(--sun);color:var(--sun-ink);
+  font-weight:800;font-size:1.3rem;padding:14px 18px;box-shadow:0 4px 0 var(--sun-edge);
+}
+.primary:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sun-edge)}
+.second{
+  appearance:none;border:2px solid var(--leaf);border-radius:18px;background:var(--surface);color:var(--ink);
+  font-weight:800;font-size:1.1rem;padding:12px 14px;
+}
+.second:active{transform:translateY(2px)}
+.toggle{display:flex;align-items:center;gap:12px;font-weight:700;line-height:1.5}
+.toggle input{width:26px;height:26px;accent-color:var(--leaf);flex:none;margin:0}
+
+/* ---------- せつめい ---------- */
+#help h2{margin:0;font-size:1.6rem;font-weight:800}
+#help h3{margin:6px 0 0;font-size:1.1rem;font-weight:800}
+.howto{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.howto li{display:flex;gap:10px;align-items:flex-start;line-height:1.7;font-weight:700;color:var(--muted)}
+.howto li::before{content:"";flex:none;width:12px;height:12px;margin-top:.5em;border-radius:3px;background:var(--grass);box-shadow:0 0 0 2px var(--tie)}
+.card{background:var(--surface);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.card h4{margin:0;font-size:1rem;font-weight:800}
+.card p{margin:0;font-weight:700;color:var(--muted);line-height:1.6}
+.pts{width:100%;border-collapse:collapse;font-weight:700;font-variant-numeric:tabular-nums}
+.pts td{padding:4px 2px;border-top:1px solid var(--line)}
+.pts td:last-child{text-align:right;color:var(--ink)}
+.memo{margin:0;font-size:.8rem;font-weight:700;color:var(--muted);text-align:right}
+
+/* ---------- あそぶ画面 ---------- */
+#play{position:relative;display:flex;flex-direction:column;touch-action:none}
+.playbar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px 0}
+.hold{
+  position:relative;overflow:hidden;appearance:none;border:0;background:var(--surface);
+  color:var(--muted);font-size:.85rem;font-weight:700;border-radius:999px;padding:8px 14px;flex:0 1 auto;
+}
+.hold-fill{position:absolute;inset:0;background:var(--sun);transform:scaleX(0);transform-origin:left center}
+.hold.holding .hold-fill{transform:scaleX(1);transition:transform .9s linear}
+.hold-label{position:relative}
+.pillbtn{appearance:none;border:2px solid var(--leaf);background:var(--surface);color:var(--ink);font-weight:800;font-size:.95rem;border-radius:999px;padding:6px 16px}
+.clock{flex:none;display:flex;align-items:baseline;gap:4px;background:var(--surface);border-radius:999px;padding:2px 14px 4px;font-weight:800}
+.clock b{flex:none;font-size:2rem;line-height:1.2;font-variant-numeric:tabular-nums;min-width:1.3em;text-align:right}
+.clock.long b{font-size:1.55rem}
+.clock span{flex:none;font-size:.95rem;color:var(--muted)}
+.tagstack{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none}
+.hitag{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;padding:4px 12px;border-radius:14px;background:var(--surface);font-weight:700;color:var(--muted);font-size:.72rem}
+.hitag b{font-size:.95rem;color:var(--ink)}
+.smalltag{font-size:.75rem;font-weight:700;color:var(--muted);background:var(--surface);border-radius:999px;padding:3px 10px}
+#stage{position:relative;flex:1;overflow:hidden;touch-action:none}
+#board{
+  position:absolute;background:var(--tray);border-radius:3px;overflow:hidden;
+  box-shadow:0 0 0 10px var(--frame),0 14px 26px rgba(0,0,0,.2);
+}
+.tile{position:absolute;left:0;top:0;padding:2px;touch-action:none;cursor:pointer;will-change:transform}
+.tile.slide{transition:transform .14s ease-out}
+.face{
+  width:100%;height:100%;border-radius:7px;overflow:hidden;background:var(--grass);
+  box-shadow:0 3px 0 rgba(70,40,10,.35),0 5px 10px rgba(0,0,0,.15);
+}
+.face svg{display:block;width:100%;height:100%}
+.tile.locked .face{box-shadow:inset 0 0 0 4px var(--sun),0 3px 0 rgba(70,40,10,.35)}
+.tile.nope .face{animation:nope .3s ease-out}
+@keyframes nope{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.tile.turnable .face{animation:turnme .35s ease-in-out infinite alternate}
+@keyframes turnme{
+  from{box-shadow:inset 0 0 0 4px var(--sun)}
+  to{box-shadow:inset 0 0 0 9px #fff,0 0 0 4px var(--sun)}
+}
+.hint{
+  position:absolute;left:0;top:0;pointer-events:none;z-index:40;border-radius:9px;
+  box-shadow:inset 0 0 0 4px var(--sun);background:rgba(255,200,61,.28);
+  animation:glow 1s ease-in-out infinite alternate;
+}
+@keyframes glow{from{opacity:.45}to{opacity:1}}
+.tie{stroke:var(--tie);fill:none}
+.rail{stroke:var(--rail);fill:none}
+#train{position:absolute;left:0;top:0;pointer-events:none;z-index:50;will-change:transform}
+#train svg{display:block;width:100%;height:100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+#train.crash svg{animation:crash .5s ease-out}
+@keyframes crash{20%{transform:rotate(-12deg)}45%{transform:rotate(10deg)}70%{transform:rotate(-6deg)}100%{transform:none}}
+#count{
+  position:absolute;inset:0;z-index:60;pointer-events:none;display:grid;place-items:center;
+  font-size:5rem;font-weight:800;color:#fff;
+  text-shadow:0 4px 0 var(--frame),0 0 18px rgba(0,0,0,.35);
+}
+#count.word{font-size:2.6rem}
+#count.pop{animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(1.6);opacity:0}40%{transform:scale(1);opacity:1}}
+#confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:900}
+
+/* ---------- けっか ---------- */
+.done{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:950;
+  width:min(360px,calc(100% - 28px));max-height:calc(100% - 20px);overflow-y:auto;
+  background:var(--surface);border-radius:24px;
+  padding:14px 18px 16px;text-align:center;box-shadow:0 14px 32px rgba(0,0,0,.25);
+  display:flex;flex-direction:column;gap:8px;
+}
+.done h2{margin:0;font-size:1.6rem;font-weight:800}
+.reason{margin:0;color:var(--muted);font-weight:700}
+.points{margin:0 auto;background:var(--sun);color:var(--sun-ink);border-radius:16px;padding:2px 24px 4px;font-weight:800;font-size:1.1rem;box-shadow:0 3px 0 var(--sun-edge)}
+.points b{font-size:2.4rem;font-variant-numeric:tabular-nums}
+.detail{margin:0;font-weight:800;font-size:1rem}
+.detail b{font-size:1.4rem;font-variant-numeric:tabular-nums}
+.badge{margin:0 auto;background:var(--train);color:#fff;font-weight:800;border-radius:999px;padding:4px 18px;font-size:1.15rem;letter-spacing:.05em}
+.done.hi .badge{animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.15)}}
+.cheer{display:block;flex:none;width:100%;height:auto;max-height:21vh;overflow:visible}
+.kid .up{display:none}
+.kid.is-up .up{display:inline}
+.kid.is-up .down{display:none}
+.kid.is-up .bodyg{transform:translateY(-12px)}
+.shadow{transform-box:fill-box;transform-origin:center}
+.kid.is-up .shadow{transform:scale(.65)}
+.done .hold{align-self:center;border:2px solid var(--line);padding:9px 18px;font-size:.9rem}
+.done.compact{gap:6px;padding:10px 14px 12px}
+.done.compact #cheer,.done.compact .reason{display:none}
+.done.compact h2{font-size:1.2rem}
+.done.compact .points b{font-size:1.6rem}
+.done.compact .primary{font-size:1.05rem;padding:11px 14px}
+.done.compact .second{font-size:.95rem;padding:9px 12px}
+@media (prefers-reduced-motion: reduce){
+  .tile.slide{transition:none}
+  .tile.nope .face,#train.crash svg,#count.pop,.hint,.done.hi .badge{animation:none}
+  .tile.turnable .face{animation:none;box-shadow:inset 0 0 0 9px #fff,0 0 0 4px var(--sun)}
+}
+</style>
+</head>
+<body>
+
+<section id="home" class="screen">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+      <rect x="0" y="0" width="100" height="100" rx="18" fill="var(--grass)"/>
+      <path d="M50 100 A50 50 0 0 1 100 50" class="tie" stroke-width="30" stroke-dasharray="4.5 8"/>
+      <path d="M38 100 A62 62 0 0 1 100 38" class="rail" stroke-width="5"/>
+      <path d="M62 100 A38 38 0 0 1 100 62" class="rail" stroke-width="5"/>
+      <g transform="translate(64.6 64.6) rotate(45) translate(-13 -21)">
+        <rect x="1" y="1" width="24" height="40" rx="8" fill="var(--train)"/>
+        <rect x="5" y="5" width="16" height="8" rx="3" fill="var(--window)"/>
+      </g>
+    </svg>
+    <h1>でんしゃパズル</h1>
+  </div>
+  <p class="lead">せんろの タイルを うごかして、むげんループを つくろう！</p>
+  <p class="hiscore" id="homeHi"></p>
+
+  <div class="btnrow">
+    <button class="primary" id="startBtn">あそぶ</button>
+    <button class="second" id="helpBtn">せつめい</button>
+  </div>
+
+  <fieldset class="speeds">
+    <legend>はやさ</legend>
+    <div class="speed-row" id="speedRow"></div>
+  </fieldset>
+
+  <fieldset class="speeds">
+    <legend>じゅうじで まがる</legend>
+    <div class="speed-row" id="modeRow"></div>
+  </fieldset>
+
+  <fieldset class="speeds">
+    <legend>むげんループ</legend>
+    <div class="speed-row" id="loopRow" style="grid-template-columns:repeat(2,1fr)"></div>
+  </fieldset>
+
+  <!-- ヒントは いまは つかわない(しくみは のこしてある) -->
+  <label class="toggle" hidden><input type="checkbox" id="hintToggle">つぎに すすむ ところを ひからせる(ヒント)</label>
+</section>
+
+<section id="help" class="screen" hidden>
+  <h2>せつめい</h2>
+
+  <h3>あそびかた</h3>
+  <ul class="howto">
+    <li>タイルを シュッと なぞると、あいている ところへ うごくよ</li>
+    <li>タイルを タップすると くるっと まわるよ(じゅうじは まわらないよ)</li>
+    <li>でんしゃが のっている タイルは、うごかせないし まわせないよ</li>
+    <li>でんしゃが じゅうじの まんなかに きて ひかったら タップ！ 1かいで みぎ、2かいで ひだりに まがるよ</li>
+    <li>はしまで いくと、はんたいがわから でてくるよ</li>
+    <li>せんろが とぎれたら おしまい</li>
+    <li>なにも さわらなくても でんしゃが ずっと はしりつづける せんろを つくって、さわらずに 1しゅう したら「むげんループ かんせい」で あがり！</li>
+  </ul>
+
+  <h3>とくてん</h3>
+  <div class="card">
+    <h4>むげんループ かんせい</h4>
+    <p>つかった タイル 1まいで 10てん。はやく できたら ボーナスが つくよ。</p>
+    <table class="pts">
+      <tr><td>0〜99びょう</td><td>+40てん</td></tr>
+      <tr><td>100〜199びょう</td><td>+30てん</td></tr>
+      <tr><td>200〜299びょう</td><td>+20てん</td></tr>
+      <tr><td>300〜399びょう</td><td>+10てん</td></tr>
+      <tr><td>400びょう〜</td><td>+0てん</td></tr>
+    </table>
+    <p>さいこうは 150てん(タイル 11まい ＋ 40てん)</p>
+  </div>
+  <div class="card">
+    <h4>いきどまりで おしまい</h4>
+    <p>ながく はしれたら てんすうが もらえるよ。</p>
+    <table class="pts">
+      <tr><td>0〜99びょう</td><td>0てん</td></tr>
+      <tr><td>100〜199びょう</td><td>10てん</td></tr>
+      <tr><td>200〜299びょう</td><td>20てん</td></tr>
+      <tr><td>300びょう〜</td><td>30てん</td></tr>
+    </table>
+  </div>
+  <p class="lead" style="font-size:.95rem;color:var(--muted)">はやさや せっていが ちがっても けいさんは おなじ。はやい でんしゃほど むずかしいよ。</p>
+
+  <p class="memo">タイル:カーブ6・じゅうじ2・ちょくせん3(ぜんぶで11まい)</p>
+  <p class="memo">つくった ひ:2026ねん 10がつ 28にち</p>
+
+  <button class="primary" id="helpBack">せっていに もどる</button>
+</section>
+
+<section id="play" class="screen" hidden>
+  <div class="playbar">
+    <button class="hold" id="backBtn" aria-label="ながおしで せっていに もどる"><span class="hold-fill"></span><span class="hold-label">ながおしで もどる</span></button>
+    <button class="pillbtn" id="helpBtn2" hidden>せつめい</button>
+    <div class="clock" aria-live="off"><b id="time">0</b><span>びょう</span></div>
+    <div class="tagstack"><span class="hitag" id="hiTag"></span><span class="smalltag" id="turnsTag" hidden></span></div>
+  </div>
+  <div id="stage">
+    <div id="board">
+      <div id="hint" class="hint" hidden></div>
+      <div id="train"><svg viewBox="0 0 40 64" aria-hidden="true">
+        <rect x="3" y="3" width="34" height="58" rx="11" fill="var(--train)"/>
+        <rect x="9" y="22" width="22" height="30" rx="5" fill="var(--train-roof)"/>
+        <path d="M14 28 L20 34 L26 28 M14 46 L20 40 L26 46" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".85"/>
+        <rect x="8" y="7" width="24" height="11" rx="4" fill="var(--window)"/>
+        <circle cx="9" cy="5.5" r="2.2" fill="#FFE27A"/><circle cx="31" cy="5.5" r="2.2" fill="#FFE27A"/>
+      </svg></div>
+      <div id="count" hidden></div>
+    </div>
+  </div>
+  <canvas id="confetti"></canvas>
+  <div class="done" id="done" hidden>
+    <svg class="cheer" id="cheer" viewBox="0 0 300 150" role="img" aria-label="みんなで ばんざい"></svg>
+    <p class="badge" id="badge" hidden>ハイスコア！</p>
+    <h2 id="doneTitle"></h2>
+    <p class="reason" id="reason">せんろが とぎれちゃった</p>
+    <p class="points"><b id="points">0</b> てん</p>
+    <p class="detail" id="tilesLine">タイル <b id="tilesNum">0</b> まい</p>
+    <p class="detail"><b id="secNum">0</b> <span id="secUnit">びょう</span></p>
+    <button class="primary" id="sameBtn">おなじ せんろで もういちど</button>
+    <button class="second" id="newBtn">あたらしい せんろで あそぶ</button>
+    <button class="hold" id="homeBtn" aria-label="ながおしで せっていを かえる"><span class="hold-fill"></span><span class="hold-label">ながおしで せっていを かえる</span></button>
+  </div>
+</section>
+
+<script>
+(function(){
+  "use strict";
+  const $ = s => document.querySelector(s);
+
+  // ---- うっかり操作の防止(ピンチ拡大・ダブルタップ拡大・長押しメニュー・スクロール) ----
+  ["gesturestart","gesturechange","gestureend"].forEach(t =>
+    document.addEventListener(t, e => e.preventDefault(), {passive:false}));
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("dblclick", e => e.preventDefault(), {passive:false});
+  $("#play").addEventListener("touchmove", e => e.preventDefault(), {passive:false});
+  document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, {passive:false});
+
+  // ---- 基本データ ----
+  const COLS = 3, ROWS = 4;
+  const DX = {N:0, E:1, S:0, W:-1}, DY = {N:-1, E:0, S:1, W:0};
+  const OPP = {N:"S", S:"N", E:"W", W:"E"};
+  const SIDES = {NS:["N","S"], EW:["E","W"], NE:["N","E"], NW:["N","W"], SE:["S","E"], SW:["S","W"]};
+  const SPEEDS = {
+    slow:   {label:"ゆっくり", sec:4},
+    normal: {label:"ふつう",   sec:3},
+    fast:   {label:"はやい",   sec:2}
+  };
+  const MODES = {free:"なんかいでも", five:"5かいまで", none:"まがらない"};
+  const LOOPMODES = {wrap:"はしを こえても OK", inside:"わくの なかだけ"};
+
+  // はやさのアイコン(ゆっくり=ろめんでんしゃ、ふつう=でんしゃ、はやい=しんかんせん)
+  const RAIL = `<line x1="4" y1="30" x2="60" y2="30" stroke="var(--rail)" stroke-width="1.6"/>`;
+  const ICONS = {
+    slow: `<svg class="icon" viewBox="0 0 64 32" aria-hidden="true">
+      <path d="M26 8 L32 2 L38 8" stroke="var(--ink)" stroke-width="1.6" fill="none"/>
+      <rect x="14" y="8" width="36" height="17" rx="8" fill="var(--train)"/>
+      <rect x="19" y="12" width="7" height="6" rx="2" fill="#fff"/><rect x="28.5" y="12" width="7" height="6" rx="2" fill="#fff"/><rect x="38" y="12" width="7" height="6" rx="2" fill="#fff"/>
+      <circle cx="22" cy="26.5" r="3" fill="var(--ink)"/><circle cx="42" cy="26.5" r="3" fill="var(--ink)"/>${RAIL}</svg>`,
+    normal: `<svg class="icon" viewBox="0 0 64 32" aria-hidden="true">
+      <path d="M26 7 L31 2 L36 7" stroke="var(--ink)" stroke-width="1.6" fill="none"/>
+      <path d="M4 7 H53 Q58 7 59 12 L60 25 H4 Z" fill="var(--train)"/>
+      <rect x="4" y="19" width="56" height="2.5" fill="var(--train-roof)"/>
+      <rect x="8" y="10" width="7" height="6" rx="1.5" fill="#fff"/><rect x="18" y="10" width="7" height="6" rx="1.5" fill="#fff"/><rect x="28" y="10" width="7" height="6" rx="1.5" fill="#fff"/><rect x="38" y="10" width="7" height="6" rx="1.5" fill="#fff"/>
+      <path d="M49 10 H56 L57 16 H49 Z" fill="var(--window)"/>
+      <circle cx="12" cy="27" r="2.6" fill="var(--ink)"/><circle cx="20" cy="27" r="2.6" fill="var(--ink)"/><circle cx="44" cy="27" r="2.6" fill="var(--ink)"/><circle cx="52" cy="27" r="2.6" fill="var(--ink)"/>${RAIL}</svg>`,
+    fast: `<svg class="icon" viewBox="0 0 64 32" aria-hidden="true">
+      <g stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="1" y1="11" x2="9" y2="11"/><line x1="3" y1="17" x2="11" y2="17"/><line x1="1" y1="23" x2="8" y2="23"/></g>
+      <path d="M14 9 H38 Q55 10 63 25 H14 Z" fill="var(--train)"/>
+      <path d="M14 19 H58 L59.6 22 H14 Z" fill="var(--train-roof)"/>
+      <rect x="17" y="12" width="20" height="4" rx="2" fill="#fff"/>
+      <path d="M41 11.5 Q49 12.5 53 16 H41 Z" fill="var(--window)"/>
+      <circle cx="20" cy="27" r="2.4" fill="var(--ink)"/><circle cx="28" cy="27" r="2.4" fill="var(--ink)"/><circle cx="48" cy="27" r="2.4" fill="var(--ink)"/>${RAIL}</svg>`
+  };
+
+  // 入ってきた側から、出ていく側を決める(つながらなければ null)
+  function exitFor(type, entry){
+    if (type === "X") return OPP[entry];
+    const s = SIDES[type];
+    if (s[0] === entry) return s[1];
+    if (s[1] === entry) return s[0];
+    return null;
+  }
+  const rnd = n => Math.floor(Math.random() * n);
+  const pick = a => a[rnd(a.length)];
+  function shuffle(a){ for (let i = a.length - 1; i > 0; i--){ const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const inside = (c, r) => c >= 0 && c < COLS && r >= 0 && r < ROWS;
+
+  // ---- とくてん ----
+  // むげんループ: タイル1まい10てん + じかんボーナス
+  function timeBonus(sec){ return sec < 100 ? 40 : sec < 200 ? 30 : sec < 300 ? 20 : sec < 400 ? 10 : 0; }
+  // いきどまり: はしった じかんで
+  function overPoints(sec){ return sec < 100 ? 0 : sec < 200 ? 10 : sec < 300 ? 20 : 30; }
+
+  // ---- ハイスコア(この端末のブラウザの中だけに保存。はやさに関係なく1つ) ----
+  const HI_KEY = "densha-puzzle-hiscore-v1";
+  function loadHi(){
+    try {
+      const v = JSON.parse(localStorage.getItem(HI_KEY) || "null");
+      return (v && typeof v.score === "number") ? v : {score:0, date:""};
+    } catch (e) { return {score:0, date:""}; }
+  }
+  function saveHi(){ try { localStorage.setItem(HI_KEY, JSON.stringify(hi)); } catch (e) {} }
+  let hi = loadHi();
+  const today = () => { const d = new Date(); return `${d.getMonth() + 1}/${d.getDate()}`; };
+  function renderHi(){
+    if (hi.score > 0){
+      $("#homeHi").innerHTML = `ハイスコア <b>${hi.score}</b>てん <small>(${hi.date})</small>`;
+      $("#hiTag").innerHTML = `<span>ハイスコア ${hi.date}</span><b>${hi.score}てん</b>`;
+    } else {
+      $("#homeHi").textContent = "ハイスコア まだ なし";
+      $("#hiTag").innerHTML = `<span>ハイスコア</span><b>まだ なし</b>`;
+    }
+  }
+
+  // ---- せってい ----
+  let speed = "normal", mode = "free", loopMode = "wrap";
+  function choiceRow(rowSel, items, current, onPick, iconOf){
+    const row = $(rowSel);
+    row.innerHTML = "";
+    Object.keys(items).forEach(k => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "speed";
+      b.setAttribute("aria-pressed", String(k === current));
+      if (iconOf){ const ic = document.createElement("span"); ic.style.display = "contents"; ic.innerHTML = iconOf(k); b.appendChild(ic); }
+      const name = document.createElement("span"); name.textContent = items[k].label || items[k];
+      b.appendChild(name);
+      b.addEventListener("click", () => { onPick(k); renderSettings(); });
+      row.appendChild(b);
+    });
+  }
+  function renderSettings(){
+    choiceRow("#speedRow", SPEEDS, speed, k => { speed = k; }, k => ICONS[k]);
+    choiceRow("#modeRow", MODES, mode, k => { mode = k; });
+    choiceRow("#loopRow", LOOPMODES, loopMode, k => { loopMode = k; });
+    renderHi();
+  }
+
+  // ---- 線路の絵(SVG) ----
+  function edgePt(side, cx, cy, r){
+    if (side === "N") return [cx === 100 ? 100 - r : r, 0];
+    if (side === "S") return [cx === 100 ? 100 - r : r, 100];
+    if (side === "E") return [100, cy === 100 ? 100 - r : r];
+    return [0, cy === 100 ? 100 - r : r];
+  }
+  function trackD(type, off){
+    if (type === "NS") return `M${50 + off} 0 L${50 + off} 100`;
+    if (type === "EW") return `M0 ${50 + off} L100 ${50 + off}`;
+    const [a, b] = SIDES[type];
+    const cx = (a === "E" || b === "E") ? 100 : 0;
+    const cy = (a === "S" || b === "S") ? 100 : 0;
+    const r = 50 + off;
+    const p0 = edgePt(a, cx, cy, r), p1 = edgePt(b, cx, cy, r);
+    const a0 = Math.atan2(p0[1] - cy, p0[0] - cx), a1 = Math.atan2(p1[1] - cy, p1[0] - cx);
+    let d = a1 - a0; while (d > Math.PI) d -= 2 * Math.PI; while (d <= -Math.PI) d += 2 * Math.PI;
+    return `M${p0[0]} ${p0[1]} A${r} ${r} 0 0 ${d > 0 ? 1 : 0} ${p1[0]} ${p1[1]}`;
+  }
+  function tileSVG(type){
+    const parts = type === "X" ? ["NS","EW"] : [type];
+    let ties = "", rails = "";
+    parts.forEach(p => {
+      ties += `<path class="tie" d="${trackD(p, 0)}" stroke-width="30" stroke-dasharray="4.5 8" stroke-dashoffset="-2"/>`;
+      rails += `<path class="rail" d="${trackD(p, -12)}" stroke-width="5"/><path class="rail" d="${trackD(p, 12)}" stroke-width="5"/>`;
+    });
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">${ties}${rails}</svg>`;
+  }
+
+  // ---- でんしゃの位置(タイルの中の 0〜1 の座標) ----
+  const SP = {N:[.5, 0], E:[1, .5], S:[.5, 1], W:[0, .5]};
+  function pathAt(entry, exit, t){
+    const p0 = SP[entry], p1 = SP[exit];
+    if (OPP[entry] === exit){
+      return {x:p0[0] + (p1[0] - p0[0]) * t, y:p0[1] + (p1[1] - p0[1]) * t, ang:Math.atan2(p1[1] - p0[1], p1[0] - p0[0])};
+    }
+    const cx = (entry === "E" || exit === "E") ? 1 : 0;
+    const cy = (entry === "S" || exit === "S") ? 1 : 0;
+    const a0 = Math.atan2(p0[1] - cy, p0[0] - cx), a1 = Math.atan2(p1[1] - cy, p1[0] - cx);
+    let d = a1 - a0; while (d > Math.PI) d -= 2 * Math.PI; while (d <= -Math.PI) d += 2 * Math.PI;
+    const a = a0 + d * t, sg = d > 0 ? 1 : -1;
+    return {x:cx + .5 * Math.cos(a), y:cy + .5 * Math.sin(a), ang:Math.atan2(sg * Math.cos(a), -sg * Math.sin(a))};
+  }
+  // 十字の上の動き: 入口→まんなか→出口 をまっすぐ進み、まんなかで向きを変える(転車台)
+  function pathX(entry, exit, t){
+    const p0 = SP[entry], p1 = SP[exit];
+    const aIn = Math.atan2(.5 - p0[1], .5 - p0[0]), aOut = Math.atan2(p1[1] - .5, p1[0] - .5);
+    let x, y;
+    if (t < .5){ x = p0[0] + (.5 - p0[0]) * t * 2; y = p0[1] + (.5 - p0[1]) * t * 2; }
+    else { x = .5 + (p1[0] - .5) * (t - .5) * 2; y = .5 + (p1[1] - .5) * (t - .5) * 2; }
+    let d = aOut - aIn; while (d > Math.PI) d -= 2 * Math.PI; while (d <= -Math.PI) d += 2 * Math.PI;
+    const k = Math.min(1, Math.max(0, (t - .4) / .2));
+    return {x, y, ang:aIn + d * k};
+  }
+
+  // ---- せんろ(盤)をつくる ----
+  // 最初からむげんループができているせんろは使わず、作りなおす
+  function makeLayout(){
+    for (let i = 0; i < 200; i++){ const L = makeLayoutOnce(); if (!layoutHasLoop(L)) return L; }
+    return makeLayoutOnce();
+  }
+  function layoutHasLoop(L){
+    const grid = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+    L.tiles.forEach(t => { grid[t.r][t.c] = t; });
+    return !!findLoop(grid, L.train.c, L.train.r, L.train.exit, L.train.entry);
+  }
+  function makeLayoutOnce(){
+    const start = [1, 0]; // 一番上の真ん中から
+    const head = "S";     // 下に向かって走る
+    const startType = "NS";
+    const nc = start[0] + DX[head], nr = start[1] + DY[head], entry = OPP[head];
+    // 次のタイルは必ずつながっている
+    const cand = ["NS","EW","NE","NW","SE","SW","X"].filter(t => {
+      const ex = exitFor(t, entry);
+      return ex && inside(nc + DX[ex], nr + DY[ex]);
+    });
+    const nextType = pick(cand);
+    const cells = [];
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      if ((c === start[0] && r === start[1]) || (c === nc && r === nr)) continue;
+      cells.push([c, r]);
+    }
+    shuffle(cells);
+    const empty = cells.pop();
+    // タイルの数は固定: カーブ6・十字2・直線3(スタートのタイルも直線に含む)
+    const kind = t => t === "X" ? "X" : (t === "NS" || t === "EW") ? "S" : "C";
+    const left = {C:6, X:2, S:3};
+    left.S--; left[kind(nextType)]--;
+    const pool = [];
+    for (let i = 0; i < left.X; i++) pool.push("X");
+    for (let i = 0; i < left.S; i++) pool.push(pick(["NS","EW"]));
+    for (let i = 0; i < left.C; i++) pool.push(pick(["NE","NW","SE","SW"]));
+    shuffle(pool);
+    return {
+      tiles:[{type:startType, c:start[0], r:start[1]}, {type:nextType, c:nc, r:nr}]
+        .concat(cells.map((p, i) => ({type:pool[i], c:p[0], r:p[1]}))),
+      empty:{c:empty[0], r:empty[1]},
+      train:{c:start[0], r:start[1], entry:OPP[head], exit:head}
+    };
+  }
+
+  // ---- ゲームの状態 ----
+  const stage = $("#stage"), board = $("#board"), trainEl = $("#train"), countEl = $("#count"), hintEl = $("#hint");
+  const G = {
+    layout:null, grid:[], tiles:[], empty:{c:0, r:0},
+    c:0, r:0, entry:"N", exit:"S", t:.5,
+    elapsed:0, state:"idle", s:80, raf:0, last:0, timers:[],
+    hint:false, turn:0, turnTile:null, turnsLeft:Infinity, lap:null, reserve:0
+  };
+
+  function measure(){
+    const W = stage.clientWidth, H = stage.clientHeight - (G.reserve || 0), pad = 28;
+    G.s = Math.max(40, Math.floor(Math.min((W - pad * 2) / COLS, (H - pad * 2) / ROWS)));
+    const bw = G.s * COLS, bh = G.s * ROWS;
+    board.style.width = bw + "px"; board.style.height = bh + "px";
+    board.style.left = Math.round((W - bw) / 2) + "px";
+    board.style.top = Math.max(8, Math.round((H - bh) / 2)) + "px";
+    trainEl.style.width = (G.s * .36) + "px";
+    trainEl.style.height = (G.s * .58) + "px";
+    G.tiles.forEach(place);
+    drawHint();
+    drawTrain();
+  }
+  function place(t){
+    t.el.style.width = G.s + "px"; t.el.style.height = G.s + "px";
+    t.el.style.transform = `translate(${t.c * G.s}px,${t.r * G.s}px)`;
+  }
+
+  function build(layout){
+    G.tiles.forEach(t => t.el.remove());
+    G.tiles = [];
+    G.grid = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+    layout.tiles.forEach(d => {
+      const el = document.createElement("div");
+      el.className = "tile";
+      el.innerHTML = `<div class="face">${tileSVG(d.type)}</div>`;
+      const t = {type:d.type, c:d.c, r:d.r, el};
+      // タップ=回転、シュッとなぞる=すべらせる
+      el.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        t.down = {x:e.clientX, y:e.clientY, id:e.pointerId};
+      });
+      el.addEventListener("pointerup", e => {
+        const d0 = t.down; t.down = null;
+        if (!d0 || d0.id !== e.pointerId) return;
+        const dx = e.clientX - d0.x, dy = e.clientY - d0.y;
+        if (Math.hypot(dx, dy) < Math.max(12, G.s * .12)){ rotateTile(t); return; }
+        const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "E" : "W") : (dy > 0 ? "S" : "N");
+        swipeTile(t, dir);
+      });
+      el.addEventListener("pointercancel", () => { t.down = null; });
+      board.insertBefore(el, hintEl);
+      G.tiles.push(t);
+      G.grid[d.r][d.c] = t;
+    });
+    G.empty = {c:layout.empty.c, r:layout.empty.r};
+    G.c = layout.train.c; G.r = layout.train.r;
+    G.entry = layout.train.entry; G.exit = layout.train.exit;
+    G.t = .5; G.elapsed = 0; G.turn = 0; G.turnTile = null; G.lap = null;
+    markLocked();
+  }
+
+  function markLocked(){
+    G.tiles.forEach(t => t.el.classList.toggle("locked", t.c === G.c && t.r === G.r));
+    drawHint();
+  }
+  // 電車が次に入るマスを光らせる(ヒントありのとき。いまは画面で選べないが、しくみは残す)
+  function drawHint(){
+    const nc = (G.c + DX[G.exit] + COLS) % COLS, nr = (G.r + DY[G.exit] + ROWS) % ROWS;
+    const show = G.hint && (G.state === "count" || G.state === "run");
+    hintEl.hidden = !show;
+    if (!show) return;
+    hintEl.style.width = G.s + "px"; hintEl.style.height = G.s + "px";
+    hintEl.style.transform = `translate(${nc * G.s}px,${nr * G.s}px)`;
+  }
+
+  function nope(t){
+    t.el.classList.remove("nope"); void t.el.offsetWidth; t.el.classList.add("nope");
+  }
+
+  // タイルを空いているところへすべらせる(同じ列・行なら、まとめて動かせる)
+  function tryMove(tile){
+    if (G.state !== "count" && G.state !== "run") return;
+    const e = G.empty;
+    if (!((tile.r === e.r && tile.c !== e.c) || (tile.c === e.c && tile.r !== e.r))){ nope(tile); return; }
+    const dc = Math.sign(e.c - tile.c), dr = Math.sign(e.r - tile.r);
+    const line = [];
+    for (let c = tile.c, r = tile.r; c !== e.c || r !== e.r; c += dc, r += dr) line.push(G.grid[r][c]);
+    const locked = line.find(t => t.c === G.c && t.r === G.r);
+    if (locked){ nope(locked); return; }
+    for (let i = line.length - 1; i >= 0; i--){
+      const t = line[i];
+      G.grid[t.r][t.c] = null;
+      t.c += dc; t.r += dr;
+      G.grid[t.r][t.c] = t;
+      t.el.classList.add("slide");
+      place(t);
+    }
+    G.empty = {c:tile.c - dc, r:tile.r - dr};
+    click();
+    checkLoop(true);
+  }
+  // なぞった向きに空きマスがあるときだけすべらせる
+  function swipeTile(t, dir){
+    if (G.state !== "count" && G.state !== "run") return;
+    const e = G.empty;
+    const ok = (dir === "E" && t.r === e.r && e.c > t.c) || (dir === "W" && t.r === e.r && e.c < t.c) ||
+               (dir === "S" && t.c === e.c && e.r > t.r) || (dir === "N" && t.c === e.c && e.r < t.r);
+    if (!ok){ nope(t); return; }
+    tryMove(t);
+  }
+  // タップで時計回りに90度(十字と、電車が乗っているタイルは回らない)
+  const ROT = {NS:"EW", EW:"NS", NE:"SE", SE:"SW", SW:"NW", NW:"NE"};
+  function rotateTile(t){
+    if (G.state !== "count" && G.state !== "run") return;
+    if (t.c === G.c && t.r === G.r && t.type === "X" && turnWindow()){ turnTrain(); return; }
+    if (t.type === "X" || (t.c === G.c && t.r === G.r)){ nope(t); return; }
+    t.type = ROT[t.type];
+    const face = t.el.firstChild;
+    face.innerHTML = tileSVG(t.type);
+    if (face.animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      face.animate([{transform:"rotate(-90deg)"}, {transform:"rotate(0deg)"}], {duration:160, easing:"ease-out"});
+    }
+    click();
+    checkLoop(true);
+  }
+
+  // ---- 十字のまんなかで曲がる(転車台) ----
+  // タップごとに まっすぐ → 右 → 左 → まっすぐ …(Uターンはなし)
+  const CW = {N:"E", E:"S", S:"W", W:"N"}, CCW = {N:"W", W:"S", S:"E", E:"N"};
+  function turnWindow(){ return G.state === "run" && G.turnsLeft > 0 && G.t >= .2 && G.t <= .6; }
+  function updateTurnsTag(){
+    const el = $("#turnsTag");
+    if (mode === "five"){ el.hidden = false; el.textContent = `まがる のこり ${G.turnsLeft}`; }
+    else if (mode === "none"){ el.hidden = false; el.textContent = "まがらない"; }
+    else el.hidden = true;
+  }
+  function turnTrain(){
+    const straight = OPP[G.entry];
+    G.turn = (G.turn + 1) % 3;
+    G.exit = [straight, CW[straight], CCW[straight]][G.turn];
+    if (G.t > .5) G.t = .5; // まんなかを少し過ぎていても、まんなかから曲がる
+    drawHint(); drawTrain(); click();
+    checkLoop(true);
+  }
+  function markTurnable(){
+    const tile = G.grid[G.r] && G.grid[G.r][G.c];
+    const on = !!tile && tile.type === "X" && turnWindow();
+    if (G.turnTile && (G.turnTile !== tile || !on)){ G.turnTile.el.classList.remove("turnable"); G.turnTile = null; }
+    if (on && G.turnTile !== tile){ tile.el.classList.add("turnable"); G.turnTile = tile; }
+  }
+
+  function drawTrain(){
+    const cur = G.grid[G.r] && G.grid[G.r][G.c];
+    const tt = Math.min(1, G.t);
+    const p = (cur && cur.type === "X") ? pathX(G.entry, G.exit, tt) : pathAt(G.entry, G.exit, tt);
+    const w = G.s * .36, h = G.s * .58;
+    const x = (G.c + p.x) * G.s - w / 2, y = (G.r + p.y) * G.s - h / 2;
+    trainEl.style.transform = `translate(${x}px,${y}px) rotate(${p.ang + Math.PI / 2}rad)`;
+  }
+
+  // 次のタイルへ進む。進めなければ理由を返す
+  function advance(){
+    // 十字で曲がって通り抜けたら、1回と数える
+    const here = G.grid[G.r][G.c];
+    if (G.state === "run" && here && here.type === "X" && G.turn !== 0 && G.turnsLeft !== Infinity){
+      G.turnsLeft = Math.max(0, G.turnsLeft - 1); updateTurnsTag();
+    }
+    // はしをこえたら、同じ行・列のはんたいがわから出てくる
+    const nc = (G.c + DX[G.exit] + COLS) % COLS, nr = (G.r + DY[G.exit] + ROWS) % ROWS;
+    const tile = G.grid[nr][nc];
+    if (!tile) return "gap";
+    const entry = OPP[G.exit], ex = exitFor(tile.type, entry);
+    if (!ex) return "gap";
+    G.c = nc; G.r = nr; G.entry = entry; G.exit = ex; G.t -= 1; G.turn = 0;
+    markLocked();
+    return null;
+  }
+
+  function setTime(n){ $("#time").textContent = n; $(".clock").classList.toggle("long", n >= 100); }
+
+  function loop(now){
+    const dt = Math.min(.05, Math.max(0, (now - G.last) / 1000));
+    G.last = now;
+    if (G.state === "run" || G.state === "clear"){
+      const running = G.state === "run";
+      if (running) G.elapsed += dt;
+      G.t += dt / SPEEDS[speed].sec;
+      while (G.t >= 1){
+        const why = advance();
+        if (why){ G.t = 1; drawTrain(); gameOver(why); break; }
+        if (G.state === "run") lapTick();
+      }
+      if (running && G.state === "run") setTime(Math.floor(G.elapsed));
+    }
+    drawTrain();
+    markTurnable();
+    if (G.state === "run" || G.state === "count" || G.state === "clear") G.raf = requestAnimationFrame(loop);
+  }
+
+  function clearTimers(){ G.timers.forEach(clearTimeout); G.timers = []; }
+  function later(fn, ms){ G.timers.push(setTimeout(fn, ms)); }
+
+  function showCount(text, word){
+    countEl.hidden = false;
+    countEl.textContent = text;
+    countEl.classList.toggle("word", !!word);
+    countEl.classList.remove("pop"); void countEl.offsetWidth; countEl.classList.add("pop");
+  }
+
+  // 左上のボタン: プレイ中は「ながおしで もどる」、ふりかえりでは「せつめい」
+  function setReview(on){
+    $("#backBtn").hidden = on;
+    $("#helpBtn2").hidden = !on;
+  }
+
+  function startGame(layout){
+    audio(); // ボタンを押したときに音の準備をしておく(iPhone対策)
+    clearTimers(); stopParty();
+    cancelAnimationFrame(G.raf);
+    G.layout = layout;
+    G.reserve = 0;
+    const d = $("#done"); d.hidden = true; d.classList.remove("compact", "hi");
+    $("#home").hidden = true; $("#help").hidden = true; $("#play").hidden = false;
+    setReview(false);
+    G.hint = $("#hintToggle").checked;
+    G.turnsLeft = mode === "five" ? 5 : mode === "none" ? 0 : Infinity;
+    G.state = "count";
+    updateTurnsTag();
+    renderHi();
+    setTime(0);
+    trainEl.classList.remove("crash");
+    build(JSON.parse(JSON.stringify(layout)));
+    measure();
+    G.last = performance.now();
+    G.raf = requestAnimationFrame(loop);
+    ["5","4","3","2","1"].forEach((n, i) => later(() => showCount(n), i * 900));
+    later(() => {
+      showCount("しゅっぱつ！", true);
+      horn();
+      G.state = "run";
+      G.last = performance.now();
+      checkLoop();
+    }, 4500);
+    later(() => { countEl.hidden = true; }, 5400);
+  }
+
+  // ---- むげんループ(あがり) ----
+  // いまのせんろのまま、何もさわらなくても(十字はまっすぐ)ずっと走り続けられるかをたどって調べる。
+  // ループがあれば、そのループで使っているタイルの枚数と、はしをこえるかどうか、1しゅうまでの歩数を返す
+  function findLoop(grid = G.grid, c = G.c, r = G.r, ex = G.exit, entry0 = G.entry){
+    const key0 = c + "," + r + entry0;
+    const keys = [], cells = [], wraps = [];
+    for (let i = 0; i < 60; i++){
+      const rc = c + DX[ex], rr = r + DY[ex];
+      const wrapped = !inside(rc, rr);
+      c = (rc + COLS) % COLS; r = (rr + ROWS) % ROWS;
+      const entry = OPP[ex];
+      const t = grid[r][c];
+      if (!t) return null;
+      const key = c + "," + r + entry;
+      const j = keys.indexOf(key);
+      if (j >= 0){
+        const cyc = wraps.slice(j + 1).concat([wrapped]);
+        const steps = keys[keys.length - 1] === key0 ? keys.length : keys.length + 1;
+        return {tiles:new Set(cells.slice(j)).size, wraps:cyc.some(Boolean), steps};
+      }
+      keys.push(key); cells.push(c + "," + r); wraps.push(wrapped);
+      ex = exitFor(t.type, entry);
+      if (!ex) return null;
+    }
+    return null;
+  }
+  // ループができたら、タイルをさわらずに1しゅう走りきったところで「かんせい」。
+  // とちゅうでタイルを動かしたり回したり、十字で曲がったら、数えなおし
+  function checkLoop(reset){
+    if (G.state !== "run") return;
+    if (reset) G.lap = null;
+    if (G.lap) return;
+    const L = findLoop();
+    if (L && (loopMode === "wrap" || !L.wraps)) G.lap = {left:L.steps, tiles:L.tiles};
+  }
+  function lapTick(){
+    if (!G.lap){ checkLoop(); return; }
+    G.lap.left--;
+    if (G.lap.left <= 0) finish("clear", null, G.lap.tiles);
+  }
+
+  function gameOver(why){ finish("over", why, 0); }
+
+  function finish(kind, why, tiles){
+    G.state = kind; // "clear" なら電車はループを走り続け、時間だけ止まる
+    if (G.turnTile){ G.turnTile.el.classList.remove("turnable"); G.turnTile = null; }
+    hintEl.hidden = true;
+    countEl.hidden = true;
+    const sec = Math.floor(G.elapsed);
+    setTime(sec);
+    const pts = kind === "clear" ? tiles * 10 + timeBonus(sec) : overPoints(sec);
+    const isHi = pts > 0 && pts > hi.score;
+    if (isHi){ hi = {score:pts, date:today()}; saveHi(); }
+    if (kind === "clear"){ horn(); }
+    else {
+      trainEl.classList.remove("crash"); void trainEl.offsetWidth; trainEl.classList.add("crash");
+      crashSound();
+    }
+    setReview(true);
+    later(() => showResult(kind, tiles, sec, pts, isHi), kind === "clear" ? 1200 : 900);
+  }
+
+  function showResult(kind, tiles, sec, pts, isHi){
+    const d = $("#done");
+    d.classList.remove("compact", "hi");
+    $("#doneTitle").textContent = kind === "clear" ? "むげんループ かんせい！" : "おしまい";
+    $("#reason").hidden = kind === "clear";
+    $("#points").textContent = pts;
+    $("#tilesLine").hidden = kind !== "clear";
+    $("#tilesNum").textContent = tiles;
+    $("#secNum").textContent = sec;
+    $("#secUnit").textContent = kind === "clear" ? "びょう" : "びょう はしったよ";
+    $("#badge").hidden = !isHi;
+    const party = kind === "clear" || isHi;
+    $("#cheer").hidden = !party;
+    d.hidden = false;
+    renderHi();
+    if (isHi){
+      // ハイスコアは もっと はでに
+      d.classList.add("hi");
+      fanfare();
+      burst(260); later(() => burst(220), 1100); later(() => burst(220), 2300);
+      later(applause, 900); later(applause, 2700);
+      startCheer(150);
+    } else if (party){
+      burst(170); applause(); startCheer(260);
+    }
+    if (kind === "clear") later(compactDone, isHi ? 5500 : 4000); // ばんざいのあと、ループを走る画面にもどす
+  }
+
+  // お祝いのあと、ボタンだけの小さなパネルにして、せんろ全体が見えるように上へ寄せる
+  function compactDone(){
+    const d = $("#done");
+    stopParty();
+    d.classList.add("compact");
+    G.reserve = d.offsetHeight + 22;
+    G.tiles.forEach(t => t.el.classList.remove("slide"));
+    measure();
+  }
+
+  function showHome(){
+    clearTimers(); stopParty();
+    cancelAnimationFrame(G.raf);
+    G.state = "idle";
+    $("#done").hidden = true;
+    $("#play").hidden = true; $("#help").hidden = true; $("#home").hidden = false;
+    renderSettings();
+  }
+
+  // ---- せつめい画面 ----
+  let helpFrom = "home";
+  function showHelp(from){
+    helpFrom = from;
+    $("#helpBack").textContent = from === "play" ? "もどる" : "せっていに もどる";
+    $("#home").hidden = true; $("#play").hidden = true; $("#help").hidden = false;
+    $("#help").scrollTop = 0;
+  }
+  $("#helpBtn").addEventListener("click", () => showHelp("home"));
+  $("#helpBtn2").addEventListener("click", () => showHelp("play"));
+  $("#helpBack").addEventListener("click", () => {
+    $("#help").hidden = true;
+    if (helpFrom === "play"){ $("#play").hidden = false; G.tiles.forEach(t => t.el.classList.remove("slide")); measure(); }
+    else { $("#home").hidden = false; }
+  });
+
+  $("#startBtn").addEventListener("click", () => startGame(makeLayout()));
+  $("#sameBtn").addEventListener("click", () => startGame(G.layout || makeLayout()));
+  $("#newBtn").addEventListener("click", () => startGame(makeLayout()));
+
+  // ---- 長押しボタン(押している間バーが伸び、最後まで押すと実行) ----
+  function makeHold(btn, fn){
+    let timer = null;
+    const cancel = () => { clearTimeout(timer); timer = null; btn.classList.remove("holding"); };
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      btn.classList.add("holding");
+      timer = setTimeout(() => { cancel(); fn(); }, 900);
+    });
+    ["pointerup","pointerleave","pointercancel"].forEach(t => btn.addEventListener(t, cancel));
+    btn.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fn(); });
+  }
+  makeHold($("#backBtn"), showHome);
+  makeHold($("#homeBtn"), showHome);
+
+  // ---- 画面の向きや大きさが変わったとき ----
+  let rt = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (G.state !== "idle" && !$("#play").hidden){ G.tiles.forEach(t => t.el.classList.remove("slide")); measure(); }
+    }, 120);
+  });
+
+  // ---- 音(ホーン・拍手など。ファイルは使わず、その場で作る) ----
+  let AC = null;
+  function audio(){
+    try {
+      if (!AC){ const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; AC = new C(); }
+      if (AC.state === "suspended") AC.resume();
+      return AC;
+    } catch (e) { return null; }
+  }
+  let noiseBuf = null;
+  function noise(ac){
+    if (noiseBuf) return noiseBuf;
+    noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * .3), ac.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return noiseBuf;
+  }
+  function horn(){ // プー プー
+    const ac = audio(); if (!ac) return;
+    const t0 = ac.currentTime + .02;
+    [0, .5].forEach(off => {
+      const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 1700;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0, t0 + off);
+      g.gain.linearRampToValueAtTime(.16, t0 + off + .03);
+      g.gain.setValueAtTime(.16, t0 + off + .3);
+      g.gain.linearRampToValueAtTime(0, t0 + off + .4);
+      f.connect(g); g.connect(ac.destination);
+      [392, 494].forEach(fr => {
+        const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = fr;
+        o.connect(f); o.start(t0 + off); o.stop(t0 + off + .42);
+      });
+    });
+  }
+  function tone(ac, freq, t, dur, vol, type){
+    const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = type || "square"; o.frequency.value = freq;
+    f.type = "lowpass"; f.frequency.value = 3200;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .02);
+    g.gain.setValueAtTime(vol, t + dur * .7);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    o.connect(f); f.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t + dur + .02);
+  }
+  function fanfare(){ // パッパッパ パーン！
+    const ac = audio(); if (!ac) return;
+    const t0 = ac.currentTime + .05;
+    [[523,0,.13],[523,.15,.13],[523,.3,.13],[659,.45,.3],[587,.78,.13],[659,.93,.13]].forEach(([f, s, d]) => tone(ac, f, t0 + s, d, .09));
+    [523, 659, 784, 1047].forEach(f => tone(ac, f, t0 + 1.1, 1.1, .06));
+    [262, 392].forEach(f => tone(ac, f, t0 + 1.1, 1.1, .05, "triangle"));
+  }
+  function click(){
+    const ac = audio(); if (!ac) return;
+    const t0 = ac.currentTime;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "triangle"; o.frequency.setValueAtTime(700, t0); o.frequency.exponentialRampToValueAtTime(380, t0 + .06);
+    g.gain.setValueAtTime(.07, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + .08);
+    o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + .09);
+  }
+  function crashSound(){
+    const ac = audio(); if (!ac) return;
+    const t0 = ac.currentTime;
+    const src = ac.createBufferSource(); src.buffer = noise(ac);
+    const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 600;
+    const g = ac.createGain(); g.gain.setValueAtTime(.35, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + .28);
+    src.connect(f); f.connect(g); g.connect(ac.destination); src.start(t0);
+    const o = ac.createOscillator(), og = ac.createGain();
+    o.type = "square"; o.frequency.setValueAtTime(330, t0); o.frequency.exponentialRampToValueAtTime(90, t0 + .35);
+    og.gain.setValueAtTime(.06, t0); og.gain.exponentialRampToValueAtTime(.001, t0 + .38);
+    o.connect(og); og.connect(ac.destination); o.start(t0); o.stop(t0 + .4);
+  }
+  function applause(){ // パチパチパチ
+    const ac = audio(); if (!ac) return;
+    const buf = noise(ac), t0 = ac.currentTime + .05;
+    for (let i = 0; i < 70; i++){
+      const t = t0 + Math.random() * 2.2;
+      const src = ac.createBufferSource(); src.buffer = buf;
+      const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 900 + Math.random() * 1500; f.Q.value = 1.2;
+      const g = ac.createGain();
+      const v = .25 * (1 - (t - t0) / 2.6);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .05);
+      src.connect(f); f.connect(g); g.connect(ac.destination);
+      src.start(t, Math.random() * .2, .06);
+    }
+  }
+
+  // ---- 紙吹雪(何回でも追加で ふらせられる) ----
+  let craf = 0, parts = [], cw = 0, ch = 0;
+  function stopParty(){
+    stopCheer();
+    cancelAnimationFrame(craf); craf = 0; parts = [];
+    const cv = $("#confetti"); cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+  }
+  function burst(n){
+    const cv = $("#confetti"), ctx = cv.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    if (!craf){
+      cw = cv.clientWidth; ch = cv.clientHeight;
+      cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const colors = ["#FF7A8A","#FFC83D","#5BC2E7","#6DD3A0","#B98CFF","#FF9F45"];
+    const N = reduce ? Math.round(n / 4) : n;
+    for (let i = 0; i < N; i++){
+      const fromLeft = i % 2 === 0;
+      parts.push({
+        x: fromLeft ? -10 : cw + 10, y: ch * (0.25 + Math.random() * 0.3),
+        vx: (fromLeft ? 1 : -1) * (4 + Math.random() * 9), vy: -6 - Math.random() * 10,
+        w: 7 + Math.random() * 6, h: 10 + Math.random() * 8,
+        rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.35,
+        c: colors[i % colors.length]
+      });
+    }
+    if (craf) return;
+    const frame = () => {
+      ctx.clearRect(0, 0, cw, ch);
+      parts = parts.filter(p => p.y < ch + 30);
+      for (const p of parts){
+        p.vy += 0.28; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.rot * 1.5)) + 1);
+        ctx.restore();
+      }
+      if (parts.length) craf = requestAnimationFrame(frame);
+      else { ctx.clearRect(0, 0, cw, ch); craf = 0; }
+    };
+    craf = requestAnimationFrame(frame);
+  }
+
+  // ---- ばんざいする子どもたち(しゃしんパズルと同じ) ----
+  const HAIRS = {
+    short: c => `<path d="M-20 -84 A20 20 0 0 1 20 -84 Q12 -93 0 -90 Q-12 -93 -20 -84 Z" fill="${c}"/>`,
+    pigtails: c => `<circle cx="-22" cy="-90" r="7" fill="${c}"/><circle cx="22" cy="-90" r="7" fill="${c}"/>` + HAIRS.short(c),
+    bun: c => `<circle cx="0" cy="-106" r="8" fill="${c}"/>` + HAIRS.short(c)
+  };
+  function kidSVG(x, shirt, skin, hair, type){
+    const ink = "#2B2B2B";
+    return `<g class="kid" transform="translate(${x},140)">
+      <ellipse class="shadow" cx="0" cy="2" rx="22" ry="5" fill="rgba(0,0,0,.15)"/>
+      <g class="bodyg">
+        <g stroke="#3D4E7A" stroke-width="9" stroke-linecap="round"><line x1="-8" y1="-4" x2="-8" y2="-28"/><line x1="8" y1="-4" x2="8" y2="-28"/></g>
+        <g class="down" stroke="${skin}" stroke-width="8" stroke-linecap="round"><line x1="-15" y1="-55" x2="-27" y2="-33"/><line x1="15" y1="-55" x2="27" y2="-33"/></g>
+        <g class="up" stroke="${skin}" stroke-width="8" stroke-linecap="round"><line x1="-15" y1="-56" x2="-30" y2="-98"/><line x1="15" y1="-56" x2="30" y2="-98"/></g>
+        <rect x="-18" y="-64" width="36" height="40" rx="13" fill="${shirt}"/>
+        <circle cx="0" cy="-84" r="20" fill="${skin}"/>
+        ${HAIRS[type](hair)}
+        <circle cx="-12" cy="-77" r="4" fill="#FF8FA3" opacity=".6"/><circle cx="12" cy="-77" r="4" fill="#FF8FA3" opacity=".6"/>
+        <g class="down"><circle cx="-7" cy="-85" r="2.6" fill="${ink}"/><circle cx="7" cy="-85" r="2.6" fill="${ink}"/><path d="M-6 -76 Q0 -71 6 -76" stroke="${ink}" stroke-width="2.2" fill="none" stroke-linecap="round"/></g>
+        <g class="up"><path d="M-10 -84 Q-7 -89 -4 -84 M4 -84 Q7 -89 10 -84" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M-7 -77 Q0 -65 7 -77 Z" fill="#9A2F42"/></g>
+      </g>
+    </g>`;
+  }
+  $("#cheer").innerHTML =
+    kidSVG(55, "#FF7A8A", "#F6CBA4", "#4A3426", "pigtails") +
+    kidSVG(150, "#5BC2E7", "#D9A27A", "#2B2B2B", "short") +
+    kidSVG(245, "#6DD3A0", "#8D5A3B", "#1E1A17", "bun");
+
+  let cheerTimer = 0;
+  function startCheer(ms){
+    stopCheer();
+    const kids = Array.from(document.querySelectorAll("#cheer .kid"));
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      kids.forEach(k => k.classList.add("is-up"));
+      return;
+    }
+    let f = 0;
+    const tick = () => { f++; kids.forEach((k, i) => k.classList.toggle("is-up", (f + i) % 2 === 0)); };
+    tick();
+    cheerTimer = setInterval(tick, ms || 260);
+  }
+  function stopCheer(){ clearInterval(cheerTimer); cheerTimer = 0; }
+
+  renderSettings();
+})();
+</script>
+</body>
+</html>
